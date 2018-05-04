@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from scipy.integrate import odeint
+import numpy as np
 
 
 def pretty_output(method):
@@ -11,11 +13,13 @@ def pretty_output(method):
 
 
 class Problem():
-    def __init__(self, request_time, service_time, queue_max, name="Задача 5.1"):
+    def __init__(self, n, m, request_time, service_time, queue_max, name="Задача 5.1"):
         """ Одноканальная СМО с ожиданием и ограничением на длину очереди
         Этот класс реализует методы описанные в таблице 5.2(на стр 80-82)
          Л.Г ЛАБСКЕР, Л.О. БАБЕШКО "Теория массового обслуживания в экономической сфере" """
         self.name = name
+        self.n = n
+        self.m = m
         self._lambda = 1 / request_time
         self._mu = 1 / service_time
         self._m = queue_max
@@ -122,4 +126,25 @@ class Problem():
         self._T_service_all = self._N_service / self._lambda
         return self._T_service_all
 
+    @staticmethod
+    def _deriv(A, t, Ab):
+        return np.dot(Ab, A)
 
+    @staticmethod
+    def _prepare_matrix(size_, mu_, lambda_ ):
+        result = np.zeros((size_, size_))
+        for i in range(0, size_ - 1):
+            result[i][i+1] = mu_
+            result[i+1][i] = lambda_
+            result[i][i] = - lambda_- mu_
+        result[0][0] = -lambda_
+        result[size_ - 1][size_ - 1] = mu_
+        return result
+
+    def solve_diff(self, steps):
+        Ab = self._prepare_matrix(self.n + self.m + 1, self._mu, self._lambda)
+        time = np.linspace(0, 25, steps)
+        A0 = np.zeros(self.n + self.m + 1)
+        A0[0] = 1
+        MA = odeint(self._deriv, A0, time, args=(Ab,))
+        return MA
