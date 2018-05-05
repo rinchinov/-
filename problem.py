@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from scipy.integrate import odeint
 import numpy as np
+import matplotlib.pyplot as pp
 
 
 def pretty_output(method):
@@ -138,13 +139,16 @@ class Problem():
             result[i+1][i] = lambda_
             result[i][i] = - lambda_- mu_
         result[0][0] = -lambda_
-        result[size_ - 1][size_ - 1] = mu_
+        result[size_ - 1][size_ - 1] = -mu_
         return result
 
-    def solve_diff(self, steps):
+    def solve_diff(self, end, steps):
         Ab = self._prepare_matrix(self.n + self.m + 1, self._mu, self._lambda)
-        time = np.linspace(0, 25, steps)
+        time = np.linspace(0, end, steps)
         A0 = np.zeros(self.n + self.m + 1)
         A0[0] = 1
         MA = odeint(self._deriv, A0, time, args=(Ab,))
+        pp.plot(time, MA, 'x', linestyle="-")
+        pp.show()
+        # print(np.sum(MA, axis=1))
         return MA
