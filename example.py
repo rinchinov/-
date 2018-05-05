@@ -18,6 +18,7 @@ def solve_5_1():
     task.param12(pretty_output=True)
     print("5)")
     task.param13(pretty_output=True)
+    task.imitation_modelling(20, 5000, 2000)
     return task.solve_diff(20, 10000)
 
 result = solve_5_1()
