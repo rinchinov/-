@@ -148,10 +148,15 @@ class Problem():
     def solve_diff(self, end, steps):
         Ab = self._prepare_matrix(self.n + self.m + 1, self._mu, self._lambda)
         time = np.linspace(0, end, steps)
-        MA = odeint(self._deriv, self.A0, time, args=(Ab,))
+        MA = np.copy(self.A0)
+        p = np.copy(self.A0)
+        for i in range(steps-1):
+            p = p + self._deriv(p, time[i], Ab)*(end/steps)
+            MA = np.vstack((MA, p))
+        # MA = odeint(self._deriv, self.A0, time, args=(Ab,))
         pp.plot(time, MA, linestyle="-")
         pp.show()
-        print(MA)
+        # print(MA)
         # print(np.sum(MA, axis=1))
         return MA
 
@@ -168,33 +173,23 @@ class Problem():
 
     def _realize_model(self, end, count_of_sections):
         requests = np.random.exponential(scale=1/self._lambda, size=end*10)
-        time_of_service = np.random.exponential(scale=1/self._mu, size=end*10)
+        time_of_service = np.random.exponential(scale=1/self._mu + 2.3, size=end*10)
         result_raw = np.zeros(count_of_sections)
         step = (end+1)/count_of_sections
         current = 0
-        # print(result_raw, step)
         for request, time in np.c_[requests, time_of_service]:
             current += request
             state, bound_l, bound_r = self._get_state(result_raw, current, time, step, count_of_sections)
-            # print(current, bound_l, bound_r, time)
             if state < self.n + self.m:
                 for i in range(bound_l, bound_r):
-                    result_raw[i+1] += 1
-                    # print(bound_r)
+                    result_raw[i] += 1
             if bound_r == count_of_sections or abs(current - end) < 1:
-                # print(result_raw)
                 self._add_matrix_for_imitation(result_raw)
 
     def _add_matrix_for_imitation(self, array):
         res = np.zeros((self.n + self.m + 1, array.size))
-        # print(res.shape)
-        # print(array)
         for i in range(array.size):
-            # print(int(i))
-            # print(array[i])
             res[int(array[i])][int(i)] = 1
-        # print(res)
-        # print(res.shape, self.imitation.shape)
         self.imitation = np.dstack((self.imitation, res))
 
     def imitation_modelling(self, end, steps, count_of_sections):
@@ -204,9 +199,6 @@ class Problem():
                 self._realize_model(end, count_of_sections)
             except IndexError as e:
                 print("index error: {}".format(e))
-        print(self.imitation)
-        print(self.imitation.shape)
-        print(np.average(self.imitation, axis=2).shape)
         result = np.average(self.imitation, axis=2)
         time = np.linspace(0, end, count_of_sections)
         pp.plot(time, np.transpose(result), linestyle="-")
