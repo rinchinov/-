@@ -173,7 +173,7 @@ class Problem():
 
     def _realize_model(self, end, count_of_sections):
         requests = np.random.exponential(scale=1/self._lambda, size=end*10)
-        time_of_service = np.random.exponential(scale=1/self._mu + 2.3, size=end*10)
+        time_of_service = np.random.exponential(scale=1/self._mu + 3, size=end*10)
         result_raw = np.zeros(count_of_sections)
         step = (end+1)/count_of_sections
         current = 0
